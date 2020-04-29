@@ -1,0 +1,10 @@
+program Ortest
+{
+		declare while1;
+	{
+		while (a<b or b>c) {
+			print(orfunc1);
+		};
+		b := 8
+	}
+}

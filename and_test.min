@@ -1,0 +1,11 @@
+program FunctionTest
+{
+
+	function function1(in first)
+	{
+		
+		if (a<b and b>c) then
+			return a
+	}
+	print(8 * 4)
+}

@@ -1,0 +1,15 @@
+program FunctionTest
+{
+	declare ;
+	function function1(in first)
+	{
+		declare a,b,c;
+		if (a<b) then
+			print(a)
+	}
+	{
+		print(8 - (8 + 2) * (4 + 1));
+		
+		a := function1(in a, inout b);
+	}
+}
