@@ -339,6 +339,7 @@ class yac():
         self.writer_to_c = semi_code_c_file()
         self.functions_name = []
         self.read_semi_code = None
+        self.pars_call = []
 
     def set_file(self, file):
         self.lex = lex()
@@ -443,6 +444,10 @@ class yac():
             function = self.get_function(self.function_name_for_table)
             function.add_function(self.function_name_for_table)
             name = self.lex.get_id_value()
+            if self.check_if_func_exits(name):
+                print("Line: " + str(self.lex.get_line()) +
+                            "\nCan't have function with same name\n")
+                sys.exit()
             self.functions_name.append(name)
             self.function_name_for_table = name
             self.nesting_level += 1
@@ -554,20 +559,9 @@ class yac():
         elif self.token == "whiletk":
             self.token = self.lex.return_token()
             self.while_stat()
-        elif self.token == "doublewhiletk":
-            self.token = self.lex.return_token()
-            self.doublewhile_stat()
-        elif self.token == "looptk":
-            self.token = self.lex.return_token()
-            self.loop_stat()
-        elif self.token == "exittk":
-            self.token = self.lex.return_token()
         elif self.token == "forcasetk":
             self.token = self.lex.return_token()
             self.forcase_stat()
-        elif self.token == "incasetk":
-            self.token = self.lex.return_token()
-            self.incase_stat()
         elif self.token == "returntk":
             self.token = self.lex.return_token()
             self.return_stat()
@@ -580,10 +574,6 @@ class yac():
         elif self.token == "inputtk":
             self.token = self.lex.return_token()
             self.input_stat()
-        # else:
-        #     print("Line: " + str(self.lex.get_line()) +
-        #             " Statements expected at least one statement\n")
-        #     sys.exit()
 
     def assignment_stat(self):
         if self.token == "assignmenttk":
@@ -612,6 +602,7 @@ class yac():
                     self.semi_code.next_quad()
                     self.semi_code.back_path(self.semi_code.get_label(), "not_jump")
                     self.statements()
+                    self.semi_code.next_quad()
                     self.semi_code.back_path(self.semi_code.get_label(), "jump")
                     self.elsepart()
                 else:
@@ -644,6 +635,7 @@ class yac():
                 self.semi_code.back_path(self.semi_code.get_label(), "not_jump")
                 self.token = self.lex.return_token()
                 self.statements()
+                self.semi_code.next_quad()
                 self.semi_code.gen_quad("jump", "_", "_", self.semi_code.get_b_quad())
                 self.semi_code.next_quad()
                 self.semi_code.back_path(self.semi_code.get_label(), "jump")
@@ -655,19 +647,6 @@ class yac():
             print("Line: " + str(self.lex.get_line()) +
                     "\nSyntax Error: Expected '(' after while\n")
             sys.exit()
-
-    def doublewhile_stat(self):
-        self.while_stat()
-        if self.token == "elsetk":
-            self.token = self.lex.return_token()
-            self.statements()
-        else:
-            print("Line: " + str(self.lex.get_line()) +
-                    " Expected else for doublewhile\n")
-            sys.exit()
-
-    def loop_stat(self):
-        self.statements()
 
     def forcase_stat(self):
         self.semi_code.set_b_quad(self.semi_code.get_label())
@@ -700,6 +679,7 @@ class yac():
                         self.semi_code.next_quad()
                         self.semi_code.back_path(self.semi_code.get_label(), "not_jump")
                         self.statements()
+                        self.semi_code.next_quad()
                         self.semi_code.back_path(self.semi_code.get_label(), "jump")
                     else:
                         print("Line: " + str(self.lex.get_line()) +
@@ -713,9 +693,6 @@ class yac():
                 print("Line: " + str(self.lex.get_line()) +
                         "\nSyntax Error: Expected '(' after when\n")
                 sys.exit()
-
-    def incase_stat(self):
-        self.when_stat()
 
     def return_stat(self):
         self.expression()
@@ -803,6 +780,7 @@ class yac():
 
     def actualparitem(self):
         if self.token == "intk":
+            self.pars_call.append("in")
             self.token = self.lex.return_token()
             self.op.clear_values()
             self.expression()
@@ -812,6 +790,7 @@ class yac():
             self.semi_code.next_quad()
             self.op.clear_values()
         elif self.token == "inouttk":
+            self.pars_call.append("inout")
             self.token = self.lex.return_token()
             if self.token == "idtk":
                 self.semi_code.gen_quad("par", "_",
@@ -834,12 +813,10 @@ class yac():
     def boolterm(self):
         self.boolfactor()
         while self.token == "andtk":
-            self.logical = "and"        #αν ειναι αληθης η and πηγαινει απο κατω στο backpatch
-            #self.semi_code.gen_quad("jump", "_", "_", "_")                       #an einai ψευδης η and
+            self.logical = "and"
             self.semi_code.gen_quad("jump", "_", "_", "_")
             self.semi_code.next_quad()
             self.token = self.lex.return_token()
-            self.semi_code.back_path(self.semi_code.get_label(), "not_jump")  #
             self.boolfactor()
 
     def boolfactor(self):
@@ -894,6 +871,7 @@ class yac():
                     self.semi_code.gen_quad(">", self.left, self.op.get_last(), "_")
             else:
                 self.semi_code.gen_quad(self.rel, self.left, self.op.get_last(), "_")
+                self.semi_code.back_path(self.semi_code.get_label() + 3, "not_jump")
             self.semi_code.next_quad()
             self.op.clear_values()
 
@@ -945,9 +923,19 @@ class yac():
     def idtail(self):
         if self.token == "left_round_brackettk":
             self.function_open = 1
+            if not self.check_if_func_exits(self.function_call):
+                print("Line: " + str(self.lex.get_line()) +
+                            "\nFunction "+ str(self.function_call) +
+                            " doesn't exists\n")
+                sys.exit()
             self.token = self.lex.return_token()
             self.op.clear_values()
+            self.pars_call.clear()
             self.actualpars()
+            if not self.check_pars():
+                print("Line: " + str(self.lex.get_line()) +
+                            "\nNot valid arguments\n")
+                sys.exit()
             self.semi_code.gen_quad("par", "_", self.semi_code.new_temp(), "RET")
             self.semi_code.next_quad()
             self.semi_code.gen_quad("call", self.function_call, "_", "_")
@@ -980,6 +968,19 @@ class yac():
         elif self.token == "minustk":
             self.op.add(self.lex.get_id_value())
             self.token = self.lex.return_token()
+
+    def check_if_func_exits(self, name):
+        for function in self.symbol_table_list:
+            if function.get_function_name() == name:
+                return True
+        return False
+
+    def check_pars(self):
+        for function in self.symbol_table_list:
+            if function.get_function_name() == self.function_call:
+                if function.get_pars_type_as_list() == self.pars_call:
+                    return True
+        return False
 
 class semi_code():
 
@@ -1685,8 +1686,8 @@ class read_semi_code():
         return result
 
 yac_ob = yac()
-input_file = str(sys.argv[1])  #Gia to terminal
-#input_file = input("Give a file: ") #Gia ton idle
+#input_file = str(sys.argv[1])  #Gia to terminal
+input_file = input("Give a file: ") #Gia ton idle
 yac_ob.set_file(input_file)
 yac_ob.set_first_token()
 yac_ob.program()
