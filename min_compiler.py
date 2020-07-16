@@ -1685,8 +1685,8 @@ class read_semi_code():
         return result
 
 yac_ob = yac()
-#input_file = str(sys.argv[1])  #Gia to terminal
-input_file = input("Give a file: ") #Gia ton idle
+input_file = str(sys.argv[1])  #Gia to terminal
+#input_file = input("Give a file: ") #Gia ton idle
 yac_ob.set_file(input_file)
 yac_ob.set_first_token()
 yac_ob.program()

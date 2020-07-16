@@ -1,0 +1,20 @@
+program MultipleFunctions
+{
+	declare a, b, c;
+	function function1(in first)
+	{
+		declare d, e, g;
+		function function2(inout second)
+		{
+			declare t, y, u;
+			print(y + u)
+		}
+		print(d + first)
+	}
+	function function3(in third)
+	{
+			declare i, o, p;
+			print(o + p)
+	}
+	print(a + b)
+}

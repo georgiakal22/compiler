@@ -1,10 +1,10 @@
 program FunctionTest
 {
-	declare ;
-	function function1(in first)
+	declare first;
+	function function1(inout first, in first)
 	{
-		declare ;
-		call function1(in a)
+		declare a;
+		call function1(inout first)
 	}
 	
 	print(8 - (8 + 2) * (4 + 1))

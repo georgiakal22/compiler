@@ -1,11 +1,12 @@
 program FunctionTest
 {
-	declare a, b, c;
+	declare b, c, a;
 	function function1(in first)
 	{
-		declare d, e, g;
-		if (a<b) then
-			return a
+		declare ;
+		if (not[b<c] and a<b) then
+			return a+8
+				
 	}
 	print(8 - (8 + 2) * (4 + 1))
 }
