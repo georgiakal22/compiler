@@ -1,4 +1,3 @@
 # georgia_compiler
 
-16/5 the end
-
+Compiler improvisation functional language in Python
